@@ -21,20 +21,25 @@ From the new repo root:
 
 ```bash
 # 1. Create .claude structure
-mkdir -p .claude/agents
+mkdir -p .claude/agents .claude/commands
 
 # 2. Point CLAUDE.md at the shared instructions
-echo "@/Users/cpettet/git/chasemp/AlpheusCEF/agents/CLAUDE.md" > .claude/CLAUDE.md
+AGENTS=/Users/cpettet/git/chasemp/AlpheusCEF/agents
+echo "@${AGENTS}/CLAUDE.md" > .claude/CLAUDE.md
 
 # 3. Symlink each agent
-AGENTS=/Users/cpettet/git/chasemp/AlpheusCEF/agents
 for agent in tdd-guardian py-enforcer pr-reviewer refactor-scan progress-guardian adr docs-guardian learn use-case-data-patterns; do
-  ln -s "$AGENTS/${agent}.md" ".claude/agents/${agent}.md"
+  ln -sf "${AGENTS}/${agent}.md" ".claude/agents/${agent}.md"
 done
 
-# 4. Write a per-repo settings.local.json (see an existing repo for a template)
+# 4. Symlink commands
+for f in "${AGENTS}"/commands/*.md; do
+  ln -sf "$f" ".claude/commands/$(basename $f)"
+done
 
-# 5. Add agents.md at the repo root (copy and update this file)
+# 5. Write a per-repo settings.local.json (see an existing repo for a template)
+
+# 6. Add agents.md at the repo root (copy and update from agents/agents.md)
 ```
 
 ## File reference
