@@ -166,7 +166,22 @@ from the actual installed version.
 
 Homebrew installs the completion file but does not modify `~/.zshrc`. Users
 must add `HOMEBREW_PREFIX/share/zsh/site-functions` to their `fpath` manually.
-The formula `caveats` block is the only place to tell them this:
+The formula `caveats` block is the only place to tell them this.
+
+**Oh My Zsh gotcha:** OMZ runs its own `compinit` inside `source $ZSH/oh-my-zsh.sh`.
+Any `fpath` additions that appear after that line are too late — `compinit` has
+already finished and won't rescan. The `fpath` line must appear **before** the
+`source $ZSH/oh-my-zsh.sh` call, not at the end of `~/.zshrc` where most users
+would naturally put it. This also means `autoload -Uz compinit && compinit`
+should be omitted — OMZ handles it. Adding a second `compinit` call after OMZ
+has run is harmless but redundant; it will use the (already correct) cache.
+
+**Stale compinit cache:** `compinit` writes a cache file (`~/.zcompdump*`). If
+the cache was built before `_alph` appeared in `fpath`, the function will not be
+loaded even after the `fpath` is fixed. Delete all variants to force a rescan:
+```zsh
+rm -f ~/.zcompdump* && exec zsh
+```
 
 ```ruby
 def caveats
