@@ -84,6 +84,28 @@ file listing.
 
 **Rule: always leave `add_completion` at its default (`True`).**
 
+### Leading-newline bug in Typer's zsh script
+
+Typer's `source_zsh` output starts with `\n#compdef alph` instead of
+`#compdef alph`. zsh's `compinit` requires `#compdef` at byte offset 0 of the
+file — a leading newline causes compinit to skip the file entirely, so the
+completion function is never registered. Tab presses silently fall back to
+filesystem listing with no error.
+
+**Fix:** Strip leading whitespace from the generated script before writing it —
+both in the Homebrew formula and in any `completions install` command:
+
+```python
+# In _generate_completion_script:
+return result.stdout.lstrip("\n")
+```
+
+```ruby
+# In the Homebrew formula:
+(zsh_completion/"_alph").write \
+  Utils.safe_popen_read({ "_ALPH_COMPLETE" => "source_zsh" }, bin/"alph").lstrip
+```
+
 ### Why `--install-completion` fails in some environments
 
 Typer's built-in `--install-completion` uses `shellingham` to detect the
@@ -103,7 +125,9 @@ app.add_typer(completions_app, name="completions")
 def _generate_completion_script(shell: str) -> str:
     env = {**os.environ, "_ALPH_COMPLETE": f"source_{shell}"}
     result = subprocess.run(["alph"], env=env, capture_output=True, text=True)
-    return result.stdout
+    # Typer emits a leading newline before #compdef — strip it so
+    # compinit recognises the file (#compdef must be on byte 0).
+    return result.stdout.lstrip("\n")
 
 def _resolve_shell(shell: str | None) -> str:
     if shell:
