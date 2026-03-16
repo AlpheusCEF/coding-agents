@@ -58,7 +58,7 @@ man1.install "man/alph.1"
 
 **Version string:** Update the `.TH` header on every release:
 ```
-.TH ALPH 1 "2026-03-12" "alph 0.1.32" "Alpheus Context Engine Framework"
+.TH ALPH 1 "2026-03-16" "alph 0.1.36" "Alpheus Context Engine Framework"
 ```
 
 ---
