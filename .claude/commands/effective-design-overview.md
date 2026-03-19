@@ -1,1 +1,0 @@
-/Users/cpettet/git/chasemp/AlpheusCEF/agents/skills/effective-design-overview.md

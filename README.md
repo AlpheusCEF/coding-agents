@@ -1,46 +1,94 @@
-# AlpheusCEF Agents
+# AlpheusCEF Coding Agents
 
-Shared Claude Code agents, instructions, and commands for all AlpheusCEF repos.
+Org-specific Claude Code commands and configuration for AlpheusCEF repos.
 
-This is the single source of truth. All AlpheusCEF repos reference these files directly rather than maintaining their own copies.
+## Relationship to personal coding-agents
 
-## Design context
+This repo contains **only AlpheusCEF-specific** guidance. Universal coding agent
+instructions (TDD enforcement, type safety, code style, shared agents, skills,
+and commands) live in the personal
+[chasemp/coding-agents](https://github.com/chasemp/coding-agents) repo.
 
-Full project design, architecture decisions, and implementation plan are in the [overview repo](../overview/STATE.md).
+The layering model:
+
+```
+┌─────────────────────────────────────────────┐
+│ Layer 1: Personal (always loaded globally)  │
+│ ~/.claude/coding-agents/                    │
+│ Source: chasemp/coding-agents               │
+│ Contains: CLAUDE.md, agents, skills,        │
+│           commands (pr, generate-pr-review)  │
+└──────────────────┬──────────────────────────┘
+                   │ loaded via ~/.claude/CLAUDE.md @includes
+                   ▼
+┌─────────────────────────────────────────────┐
+│ Layer 2: Org (this repo)                    │
+│ Cloned into project .claude/org-agents/     │
+│ Contains: AlpheusCEF-specific commands      │
+│           (release-alph, doc-sync,          │
+│            config-scout)                    │
+└──────────────────┬──────────────────────────┘
+                   │ loaded via project CLAUDE.md @includes
+                   ▼
+┌─────────────────────────────────────────────┐
+│ Layer 3: Project                            │
+│ Each repo's own CLAUDE.md                   │
+└─────────────────────────────────────────────┘
+```
+
+**Current status (2026-03-19):** The personal layer handles all universal
+guidance via the global `~/.claude/CLAUDE.md`. If the org grows beyond a single
+contributor and needs self-contained bootstrapping (without relying on a personal
+global install), this repo would absorb or vendor the personal content. The
+architecture supports that evolution without restructuring.
 
 ## What's here
 
-| File | Purpose |
+| Path | Purpose |
 |------|---------|
-| `CLAUDE.md` | Shared project instructions imported by all repo `.claude/CLAUDE.md` files |
-| `tdd-guardian.md` | TDD enforcement and coaching agent |
-| `py-enforcer.md` | Python type safety and immutability enforcer |
-| `pr-reviewer.md` | Pull request review agent |
-| `refactor-scan.md` | Refactoring opportunity scanner |
-| `progress-guardian.md` | Progress tracking and WIP state agent |
-| `adr.md` | Architecture Decision Record writer |
-| `docs-guardian.md` | Documentation consistency guardian |
-| `learn.md` | Learning capture agent |
-| `use-case-data-patterns.md` | Use case and data pattern analysis |
-| `commands/` | Shared slash commands |
+| `commands/release-alph.md` | Cut versioned releases of alph-cli |
+| `commands/doc-sync.md` | Sync AlpheusCEF docs against alph-cli changes |
+| `commands/config-scout.md` | Compare external agent configs against local setup |
+| `config-scout/` | Config-scout findings and analysis reports |
 
-## How repos consume these files
+## Design context
 
-Each AlpheusCEF repo has:
+Full project design, architecture decisions, and implementation plan are in the
+[overview repo](../overview/STATE.md).
 
-```
-.claude/
-  CLAUDE.md            # single line: @/abs/path/to/agents/CLAUDE.md
-  agents/
-    tdd-guardian.md    # symlink → agents repo
-    py-enforcer.md     # symlink → agents repo
-    ...
-  settings.local.json  # per-repo permissions, not shared
-agents.md              # documents the setup for contributors
+## Setup for AlpheusCEF project repos
+
+### Prerequisites
+
+Personal coding-agents must be installed globally first:
+
+```bash
+git clone git@github-personal:chasemp/coding-agents.git ~/.claude/coding-agents
+# Then add to ~/.claude/CLAUDE.md:
+#   @coding-agents/CLAUDE.md
+#   @coding-agents/agents.md
 ```
 
-To wire up a new repo, run the setup script documented in `agents.md`.
+### Wiring an AlpheusCEF repo
 
-## Updating agents
+From the project repo root:
 
-Edit files here. All repos pick up changes immediately via symlinks — no sync step needed.
+```bash
+# 1. Clone this org repo into the project (gitignored)
+git clone git@github-personal:AlpheusCEF/coding-agents.git .claude/org-agents
+echo '.claude/org-agents/' >> .gitignore
+
+# 2. Symlink org-specific commands
+for cmd in release-alph doc-sync config-scout; do
+  ln -sf "org-agents/commands/${cmd}.md" ".claude/commands/${cmd}.md"
+done
+
+# 3. Project CLAUDE.md can @-include org content as needed
+```
+
+### Syncing
+
+```bash
+git -C ~/.claude/coding-agents pull --ff-only          # personal layer
+git -C .claude/org-agents pull --ff-only                # org layer
+```

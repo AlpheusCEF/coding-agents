@@ -1,1 +1,0 @@
-/Users/cpettet/git/chasemp/AlpheusCEF/agents/tdd-guardian.md
