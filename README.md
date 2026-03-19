@@ -63,7 +63,8 @@ Full project design, architecture decisions, and implementation plan are in the
 Personal coding-agents must be installed globally first:
 
 ```bash
-git clone git@github-personal:chasemp/coding-agents.git ~/.claude/coding-agents
+git clone git@github-personal:chasemp/coding-agents.git ~/git/chasemp/coding-agents
+ln -sf ~/git/chasemp/coding-agents ~/.claude/coding-agents
 # Then add to ~/.claude/CLAUDE.md:
 #   @coding-agents/CLAUDE.md
 #   @coding-agents/agents.md
@@ -123,6 +124,6 @@ echo '.claude/org-agents/' >> .gitignore
 ### Syncing
 
 ```bash
-git -C ~/.claude/coding-agents pull --ff-only                              # personal layer
+git -C ~/git/chasemp/coding-agents pull --ff-only                          # personal layer
 git -C ~/git/chasemp/AlpheusCEF/coding-agents pull --ff-only               # org layer
 ```
