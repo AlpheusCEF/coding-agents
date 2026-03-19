@@ -23,12 +23,12 @@ The layering model:
                    ▼
 ┌─────────────────────────────────────────────┐
 │ Layer 2: Org (this repo)                    │
-│ Cloned into project .claude/org-agents/     │
+│ Local checkout alongside project repos      │
 │ Contains: AlpheusCEF-specific commands      │
 │           (release-alph, doc-sync,          │
 │            config-scout)                    │
 └──────────────────┬──────────────────────────┘
-                   │ loaded via project CLAUDE.md @includes
+                   │ symlinked into project .claude/
                    ▼
 ┌─────────────────────────────────────────────┐
 │ Layer 3: Project                            │
@@ -71,24 +71,60 @@ git clone git@github-personal:chasemp/coding-agents.git ~/.claude/coding-agents
 
 ### Wiring an AlpheusCEF repo
 
-From the project repo root:
+All AlpheusCEF repos live under a shared local tree alongside this repo. The
+expected layout is:
+
+```
+~/git/chasemp/AlpheusCEF/
+  coding-agents/          ← this repo
+  alph-cli/
+  fin-cli/
+  ...
+```
+
+From the new project repo root:
 
 ```bash
-# 1. Clone this org repo into the project (gitignored)
-git clone git@github-personal:AlpheusCEF/coding-agents.git .claude/org-agents
-echo '.claude/org-agents/' >> .gitignore
+PERSONAL="$HOME/.claude/coding-agents"
+ORG="$(cd "$(dirname "$0")/../coding-agents" && pwd)"
+# Or set ORG explicitly, e.g.:
+# ORG="$HOME/git/chasemp/AlpheusCEF/coding-agents"
 
-# 2. Symlink org-specific commands
-for cmd in release-alph doc-sync config-scout; do
-  ln -sf "org-agents/commands/${cmd}.md" ".claude/commands/${cmd}.md"
+# 1. Create .claude structure
+mkdir -p .claude/agents .claude/commands
+
+# 2. Symlink agents from the personal repo
+for agent in tdd-guardian py-enforcer pr-reviewer refactor-scan \
+             progress-guardian adr docs-guardian learn use-case-data-patterns; do
+  ln -sf "${PERSONAL}/${agent}.md" ".claude/agents/${agent}.md"
 done
 
-# 3. Project CLAUDE.md can @-include org content as needed
+# 3. Symlink generic commands from the personal repo
+for cmd in pr generate-pr-review; do
+  ln -sf "${PERSONAL}/commands/${cmd}.md" ".claude/commands/${cmd}.md"
+done
+
+# 4. Symlink org-specific commands from this repo
+for cmd in release-alph doc-sync config-scout; do
+  ln -sf "${ORG}/commands/${cmd}.md" ".claude/commands/${cmd}.md"
+done
+
+# 5. Add project-specific CLAUDE.md (personal layer loads globally)
+# .claude/CLAUDE.md should contain only project-specific instructions
+```
+
+**Alternative for contributors without the local tree:** Clone this repo into
+the project directly:
+
+```bash
+git clone git@github-personal:AlpheusCEF/coding-agents.git .claude/org-agents
+echo '.claude/org-agents/' >> .gitignore
+# Then symlink from .claude/org-agents/commands/ instead of $ORG/commands/
 ```
 
 ### Syncing
 
 ```bash
-git -C ~/.claude/coding-agents pull --ff-only          # personal layer
-git -C .claude/org-agents pull --ff-only                # org layer
+git -C ~/.claude/coding-agents pull --ff-only                              # personal layer
+git -C ~/git/chasemp/AlpheusCEF/coding-agents pull --ff-only               # org layer
 ```
