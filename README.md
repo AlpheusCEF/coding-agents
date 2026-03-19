@@ -86,9 +86,7 @@ From the new project repo root:
 
 ```bash
 PERSONAL="$HOME/.claude/coding-agents"
-ORG="$(cd "$(dirname "$0")/../coding-agents" && pwd)"
-# Or set ORG explicitly, e.g.:
-# ORG="$HOME/git/chasemp/AlpheusCEF/coding-agents"
+ORG="$HOME/git/chasemp/AlpheusCEF/coding-agents"
 
 # 1. Create .claude structure
 mkdir -p .claude/agents .claude/commands
